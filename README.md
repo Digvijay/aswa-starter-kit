@@ -66,8 +66,11 @@ aswa-starter-kit/
 ## Prerequisites
 
 - An Azure subscription with Contributor + User Access Administrator on the target resource group (or Owner). User Access Administrator is required because the template assigns RBAC roles.
-- [Azure Developer CLI](https://aka.ms/azd) 1.10 or later.
-- Either Docker (for the Dev Container) or local installs of Node 20, Python 3.11, the [.NET 10 SDK](https://dotnet.microsoft.com/download), the [Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local) and the [Static Web Apps CLI](https://github.com/Azure/static-web-apps-cli).
+- [Azure Developer CLI](https://aka.ms/azd) 1.10 or later **and** the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli). The `postdeploy` hook calls `az functionapp deployment source config-zip`, so `az` is required for every runtime — not just .NET.
+- You're signed in: `az login` and `azd auth login`.
+- Either Docker (for the Dev Container — multi-arch, builds on linux/amd64 and linux/arm64) or local installs of Node 20, Python 3.11, the [.NET 10 SDK](https://dotnet.microsoft.com/download), the [Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local) and the [Static Web Apps CLI](https://github.com/Azure/static-web-apps-cli).
+- Tenant policy permits creating user-assigned managed identities and assigning RBAC roles. If your tenant blocks self-service Entra app creation, `azd pipeline config` will fail later — see [Troubleshooting](#troubleshooting).
+- Static Web Apps is only available in `westus2`, `centralus`, `eastus2`, `westeurope`, `eastasia`. Other resources can live anywhere; the SWA region is decoupled via `STATIC_WEB_APP_LOCATION` (default `westeurope`).
 
 ## Deploy
 
