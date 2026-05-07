@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Azure Static Web Apps starter kit — slides</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+  <link rel="stylesheet" href="./theme.css" />
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Title -->
+      <section data-background-gradient="linear-gradient(135deg, #0b1020, #1e3a8a)">
+        <h1>Azure Static Web Apps starter kit</h1>
+        <h3>A reference azd template</h3>
+        <p class="muted">Solution Engineering — Cloud &amp; AI Apps</p>
+        <aside class="notes">
+          Three sections: prerequisites a customer needs, the manual path
+          for building a Static Web App, and an end-to-end walkthrough of
+          this template with a comparison.
+        </aside>
+      </section>
+
+      <section>
+        <h2>Agenda</h2>
+        <ol>
+          <li>What a customer needs (skills, access, tooling)</li>
+          <li>Building a Static Web App by hand: high level then step by step</li>
+          <li>End-to-end walkthrough of this template</li>
+          <li>Comparison: template vs. manual build</li>
+        </ol>
+      </section>
+
+      <!-- Section 1 — prerequisites -->
+      <section>
+        <section data-background-color="#111827">
+          <h2>Section 1</h2>
+          <h3>What a customer needs</h3>
+        </section>
+
+        <section>
+          <h2>People and skills</h2>
+          <ul>
+            <li>Frontend: HTML, CSS, JavaScript and one SPA framework (React, Vue, Svelte, Blazor)</li>
+            <li>Backend: Azure Functions in Node, Python or .NET 10</li>
+            <li>Cloud fundamentals: resource groups, RBAC, managed identity, basic Bicep</li>
+            <li>Source control: Git, GitHub, GitHub Actions</li>
+            <li>Command-line familiarity: <code>az</code>, <code>azd</code>, <code>func</code>, <code>swa</code></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Azure access</h2>
+          <ul>
+            <li>An Azure subscription</li>
+            <li>Roles on the target resource group:
+              <ul>
+                <li>Contributor — to create resources</li>
+                <li>User Access Administrator — to assign RBAC roles</li>
+                <li>or Owner</li>
+              </ul>
+            </li>
+            <li>Quota in the target region for Static Web Apps Standard and Functions Flex Consumption (FC1)</li>
+            <li>Tenant policy that permits user-assigned managed identity</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>GitHub access</h2>
+          <ul>
+            <li>A repository (public or private). Standard SKU is required for preview environments on private repos.</li>
+            <li>GitHub Actions enabled on the repository</li>
+            <li>Permission to create an Entra application and federated credential (used by <code>azd pipeline config</code>)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Workstation tooling</h2>
+          <pre><code class="bash" data-trim>
+# Core
+winget install Microsoft.AzureCLI
+winget install Microsoft.Azd
+winget install GitHub.cli
+
+# Runtimes (install only what you need)
+winget install OpenJS.NodeJS.LTS         # Node 20
+winget install Python.Python.3.11
+winget install Microsoft.DotNet.SDK.10
+
+# Local emulators
+npm i -g azure-functions-core-tools@4 @azure/static-web-apps-cli
+          </code></pre>
+          <p class="muted">Or open the repository in a Dev Container and skip the install step.</p>
+        </section>
+      </section>
+
+      <!-- Section 2 — manual path -->
+      <section>
+        <section data-background-color="#111827">
+          <h2>Section 2</h2>
+          <h3>Building a Static Web App by hand</h3>
+        </section>
+
+        <section>
+          <h2>High-level flow</h2>
+          <ol>
+            <li>Write the frontend</li>
+            <li>Write the API as Azure Functions</li>
+            <li>Create the resources in the portal or with the CLI</li>
+            <li>Wire up GitHub Actions for deployment</li>
+            <li>Add observability, identity and a database after the fact</li>
+          </ol>
+        </section>
+
+        <section>
+          <h2>Step by step</h2>
+          <pre><code class="bash" data-trim>
+# 1. Resource group
+az group create -n rg-myapp -l westeurope
+
+# 2. Scaffold the apps
+npm create vite@latest web -- --template react
+func init api --javascript
+
+# 3. Create the Static Web App linked to GitHub
+az staticwebapp create \
+  -n stapp-myapp -g rg-myapp -l westeurope \
+  --source https://github.com/me/myapp --branch main \
+  --app-location web --api-location api \
+  --login-with-github
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>What is still missing</h2>
+          <ul>
+            <li>Application Insights and Log Analytics are not wired</li>
+            <li>No database</li>
+            <li>API uses connection strings or keys</li>
+            <li>No Bicep, so the second environment is hand-built again</li>
+            <li>Polyglot support requires a rewrite</li>
+          </ul>
+          <p class="fragment">Production work begins where most tutorials end.</p>
+        </section>
+      </section>
+
+      <!-- Section 3 — template walkthrough -->
+      <section>
+        <section data-background-gradient="linear-gradient(135deg, #064e3b, #0b1020)">
+          <h2>Section 3</h2>
+          <h3>Walkthrough of the starter kit</h3>
+        </section>
+
+        <section>
+          <h2>Three commands</h2>
+          <pre><code class="bash" data-trim>
+azd init -t Digvijay/aswa-starter-kit
+azd env set BACKEND_LANGUAGE python   # or node | dotnet
+azd up
+          </code></pre>
+          <p>You get the Static Web App, the Function App, Cosmos DB, Application Insights, the Log Analytics workspace, the managed identity and the RBAC assignments.</p>
+        </section>
+
+        <section>
+          <h2>Architecture</h2>
+<pre class="mermaid">
+flowchart LR
+  U([User]) --> SWA[Static Web App]
+  SWA -->|/api/* linked| FN["Function App<br/>Node / Python / .NET 10"]
+  FN -->|Managed identity + RBAC| COS[(Cosmos DB)]
+  FN --> AI[App Insights]
+  SWA --> AI
+  AI --> LAW[Log Analytics]
+</pre>
+        </section>
+
+        <section>
+          <h2>Repository layout</h2>
+          <pre><code class="text" data-trim>
+infra/
+  main.bicep                 AVM orchestrator
+  app/db.bicep               Cosmos via avm/res/document-db
+  app/db-rbac.bicep          Cosmos data-plane SQL role
+src/
+  web/                       Frontend (and /slides)
+  api-node/  api-python/  api-dotnet/   reference sources
+  api/                       build artifact (gitignored)
+scripts/
+  build-api.{sh,ps1}         stages chosen backend into src/api
+  deploy-api.{sh,ps1}        postdeploy hook: zip + upload
+azure.yaml                   one azd service (web)
+.devcontainer/               all three runtimes preinstalled
+.github/workflows/           CI/CD
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Bicep is built on AVM</h2>
+          <pre><code class="bicep" data-trim>
+module swa 'br/public:avm/res/web/static-site:0.9.4' = {
+  params: {
+    name: 'stapp-${resourceToken}'
+    sku: staticWebAppSku           // Standard by default
+    location: staticWebAppLocation // SWA-supported region
+    linkedBackend: {
+      resourceId: functionApp.outputs.resourceId
+      location: location
+    }
+  }
+}
+          </code></pre>
+          <p class="muted">Tags, telemetry, RBAC and diagnostics come from the module — there is no hand-written <code>Microsoft.Web/staticSites</code> block.</p>
+        </section>
+
+        <section>
+          <h2>Identity flow to Cosmos DB</h2>
+          <pre><code class="bicep" data-trim>
+// User-assigned MI is created up front so its principalId is
+// known before the Function App and the Cosmos role assignment.
+module cosmosDataRbac 'app/db-rbac.bicep' = {
+  params: {
+    cosmosAccountName: db.outputs.name
+    principalId: uami.outputs.principalId
+  }
+}
+          </code></pre>
+          <pre><code class="js" data-trim>
+const client = new CosmosClient({
+  endpoint: process.env.COSMOS_ENDPOINT,
+  aadCredentials: new DefaultAzureCredential()
+});
+          </code></pre>
+          <p class="muted">Cosmos has local auth disabled. The same code path works locally with <code>az login</code> and in Azure with the user-assigned managed identity (selected via <code>AZURE_CLIENT_ID</code>).</p>
+        </section>
+
+        <section>
+          <h2>Polyglot toggle</h2>
+          <pre><code class="bash" data-trim>
+# azure.yaml — one azd service (the SWA), one postdeploy hook
+services:
+  web:
+    project: ./src/web
+    host: staticwebapp
+hooks:
+  postdeploy:
+    posix:   { shell: sh,   run: ./scripts/deploy-api.sh }
+    windows: { shell: pwsh, run: ./scripts/deploy-api.ps1 }
+          </code></pre>
+          <p>The hook calls <code>scripts/build-api.{sh,ps1}</code>, which inspects <code>BACKEND_LANGUAGE</code> and stages the chosen runtime into <code>src/api/</code>, then uploads via <code>az functionapp deployment source config-zip --build-remote false</code>.</p>
+          <p class="muted">One <code>azure.yaml</code>. One Bicep tree. Three production-ready runtimes — <code>node</code>, <code>python</code> or <code>dotnet</code>.</p>
+        </section>
+
+        <section>
+          <h2>CI/CD without secrets</h2>
+          <pre><code class="bash" data-trim>
+azd pipeline config
+          </code></pre>
+          <ul>
+            <li>Creates an Entra application and federated credential for the repository</li>
+            <li>Writes the GitHub Actions workflow</li>
+            <li>Sets the OIDC variables (<code>AZURE_CLIENT_ID</code>, <code>AZURE_TENANT_ID</code>, …)</li>
+            <li>Pull requests get a Static Web Apps preview environment automatically</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Day-one observability</h2>
+          <pre><code class="bash" data-trim>
+azd monitor --overview     # opens Application Insights in the portal
+azd monitor --live         # tails live metrics
+          </code></pre>
+          <p>Because Bicep wired Application Insights into both the Static Web App and the Function App, traces, requests and exceptions are correlated by default.</p>
+        </section>
+      </section>
+
+      <!-- Section 4 — comparison -->
+      <section>
+        <section data-background-color="#111827">
+          <h2>Comparison</h2>
+        </section>
+
+        <section>
+          <h2>Side by side</h2>
+          <table>
+            <thead><tr><th>Concern</th><th>Manual</th><th>This template</th></tr></thead>
+            <tbody>
+              <tr><td>Provisioning</td><td>Portal or scripts</td><td><code>azd up</code></td></tr>
+              <tr><td>IaC</td><td>Hand-written</td><td>AVM, versioned</td></tr>
+              <tr><td>Identity</td><td>Connection strings</td><td>Managed identity + RBAC</td></tr>
+              <tr><td>Observability</td><td>Added later</td><td>Wired by default</td></tr>
+              <tr><td>Polyglot</td><td>Rewrite</td><td>One environment variable</td></tr>
+              <tr><td>CI/CD</td><td>Hand-edited YAML</td><td><code>azd pipeline config</code></td></tr>
+              <tr><td>Onboarding</td><td>Local installs</td><td>Open in Dev Container</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section data-background-gradient="linear-gradient(135deg, #0b1020, #1e3a8a)">
+          <h1>Thanks</h1>
+          <p><a href="https://github.com/Digvijay/aswa-starter-kit">github.com/Digvijay/aswa-starter-kit</a></p>
+          <p class="muted">Press <kbd>S</kbd> for speaker notes, <kbd>?</kbd> for shortcuts</p>
+        </section>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/markdown/markdown.js"></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+
+    async function renderMermaid() {
+      const blocks = document.querySelectorAll('pre.mermaid:not([data-processed])');
+      if (!blocks.length) return;
+      await mermaid.run({ nodes: blocks });
+    }
+
+    Reveal.initialize({
+      hash: true,
+      slideNumber: 'c/t',
+      transition: 'slide',
+      plugins: [RevealHighlight, RevealNotes, RevealMarkdown]
+    }).then(() => {
+      renderMermaid();
+      Reveal.on('slidechanged', renderMermaid);
+      Reveal.on('ready', renderMermaid);
+    });
+  </script>
+</body>
+</html>

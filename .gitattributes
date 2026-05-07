@@ -1,0 +1,20 @@
+# Normalize line endings to LF for everything checked into git, so the
+# repo is stable regardless of host OS or git autocrlf setting. Shell
+# scripts MUST be LF or they break on Linux runners and in the dev
+# container.
+* text=auto eol=lf
+
+# Explicit overrides — keep CRLF for files that need it on Windows.
+*.{cmd,bat,ps1} text eol=crlf
+
+# Treat these as binary so git doesn't try to merge them.
+*.{png,jpg,jpeg,gif,ico,webp,pdf,zip,tar,gz} binary
+*.{woff,woff2,ttf,eot,otf} binary
+
+# Don't ship CI / IDE / dev metadata in the source tarball produced by
+# `git archive` / GitHub Releases.
+/.devcontainer    export-ignore
+/.github          export-ignore
+/.vscode          export-ignore
+/.gitattributes   export-ignore
+/.gitignore       export-ignore

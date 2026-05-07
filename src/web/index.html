@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Azure Static Web Apps starter kit</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Azure Static Web Apps starter kit</h1>
+      <p class="subtitle">Static frontend, Azure Functions backend (Node, Python or .NET), Cosmos DB, Bicep using Azure Verified Modules.</p>
+      <p><a href="./slides/">Open the accompanying slide deck →</a></p>
+    </header>
+
+    <section class="card">
+      <h2>API status</h2>
+      <p>Calls <code>/api/status</code> via the Static Web Apps linked backend.</p>
+      <button id="refresh">Refresh</button>
+      <pre id="output">Loading...</pre>
+    </section>
+
+    <section class="card">
+      <h2>What this sample shows</h2>
+      <ul>
+        <li>Frontend served from the Static Web Apps edge</li>
+        <li>Backend invoked through the linked Function App (Flex Consumption)</li>
+        <li>Cosmos DB accessed with a user-assigned managed identity (no connection strings)</li>
+        <li>Telemetry sent to Application Insights and Log Analytics</li>
+      </ul>
+    </section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

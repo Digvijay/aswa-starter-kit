@@ -1,0 +1,12 @@
+.reveal h1, .reveal h2, .reveal h3 { text-transform: none; letter-spacing: -0.01em; }
+.reveal .muted { color: #94a3b8; font-size: 0.85em; }
+.reveal pre { box-shadow: 0 8px 24px rgba(0,0,0,0.35); border-radius: 8px; }
+.reveal pre code { padding: 1em; font-size: 0.55em; line-height: 1.4; }
+.reveal table { font-size: 0.7em; margin: 0 auto; border-collapse: collapse; }
+.reveal table th, .reveal table td { padding: .4em .8em; border-bottom: 1px solid #334155; }
+.reveal table th { color: #4cc2ff; }
+.reveal kbd {
+  background: #1f2937; border: 1px solid #475569;
+  border-radius: 4px; padding: 2px 6px; font-size: 0.6em;
+}
+.reveal .mermaid { background: transparent; }

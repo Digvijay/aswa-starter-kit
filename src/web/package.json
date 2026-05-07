@@ -1,0 +1,9 @@
+{
+  "name": "web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static frontend for aswa-starter-kit (no build step needed).",
+  "scripts": {
+    "build": "echo \"static site, nothing to build\""
+  }
+}

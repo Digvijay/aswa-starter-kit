@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: aswa-starter-kit
+metadata:
+  template: aswa-starter-kit@1.0.0
+
+# This template is polyglot, but only ONE backend is deployed per environment.
+# The chosen backend is set with `azd env set BACKEND_LANGUAGE node|python|dotnet`
+# (default: node).
+#
+# We deploy the Function App ourselves in a `postdeploy` hook (not as an
+# azd service) so the same code path works identically for all three runtimes
+# — including .NET on Flex Consumption, which azd 1.24's built-in deploy
+# can't handle. The hook builds the chosen backend into src/api, zips it,
+# and uploads via `az functionapp deployment source config-zip --build-remote
+# false`. azd itself only deploys the Static Web App (`web`).
+services:
+  web:
+    project: ./src/web
+    language: js
+    host: staticwebapp
+    dist: .
+
+hooks:
+  preprovision:
+    posix:
+      shell: sh
+      run: |
+        LANG_VAL="${BACKEND_LANGUAGE:-node}"
+        case "$LANG_VAL" in
+          node|python|dotnet) ;;
+          *) echo "ERROR: BACKEND_LANGUAGE must be one of: node, python, dotnet (got '$LANG_VAL')" >&2; exit 1 ;;
+        esac
+        echo "Backend language: $LANG_VAL"
+    windows:
+      shell: pwsh
+      run: |
+        $lang = if ($env:BACKEND_LANGUAGE) { $env:BACKEND_LANGUAGE } else { 'node' }
+        if ($lang -notin @('node', 'python', 'dotnet')) {
+          Write-Error "BACKEND_LANGUAGE must be one of: node, python, dotnet (got '$lang')"
+          exit 1
+        }
+        Write-Host "Backend language: $lang"
+
+  # `postprovision` is skipped by azd when there are no infra changes, so we
+  # use `postdeploy` instead — it always runs on `azd up` / `azd deploy`.
+  postdeploy:
+    posix:
+      shell: sh
+      run: ./scripts/deploy-api.sh
+    windows:
+      shell: pwsh
+      run: ./scripts/deploy-api.ps1

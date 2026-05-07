@@ -1,0 +1,24 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/api/*",
+      "/slides/*",
+      "/*.{css,js,png,jpg,svg,ico}"
+    ]
+  },
+  "routes": [
+    {
+      "route": "/api/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/slides",
+      "redirect": "/slides/",
+      "statusCode": 301
+    }
+  ],
+  "mimeTypes": {
+    ".md": "text/markdown"
+  }
+}

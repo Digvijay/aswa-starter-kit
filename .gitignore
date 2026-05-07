@@ -1,0 +1,59 @@
+# --- azd ----------------------------------------------------------------
+.azure/
+
+# --- Build artifact: chosen backend, staged here by scripts/build-api.* ---
+# We keep a small stub (package.json, host.json, README) in source control
+# so the directory exists and the prerestore hook has a target to write to.
+/src/api/*
+!/src/api/.gitkeep
+!/src/api/package.json
+!/src/api/host.json
+!/src/api/README.md
+
+# --- Node ---------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+
+# --- Python -------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.python_packages/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- .NET ---------------------------------------------------------------
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# --- Azure Functions ----------------------------------------------------
+# Local config can contain secrets — never commit.
+local.settings.json
+.func/
+host.id
+
+# --- IDE / OS -----------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+*.swp
+*.swo
+
+# --- Build / verification logs ------------------------------------------
+*.log
+azd-*.log
