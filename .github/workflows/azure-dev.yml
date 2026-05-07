@@ -70,11 +70,12 @@ jobs:
           restore-keys: azd-${{ runner.os }}-
 
       - name: Log in with Azure (Federated Credentials)
+        shell: pwsh
         run: |
-          azd auth login \
-            --client-id "$AZURE_CLIENT_ID" \
-            --federated-credential-provider "github" \
-            --tenant-id "$AZURE_TENANT_ID"
+          azd auth login `
+            --client-id "$Env:AZURE_CLIENT_ID" `
+            --federated-credential-provider "github" `
+            --tenant-id "$Env:AZURE_TENANT_ID"
 
       - name: Provision infrastructure
         run: azd provision --no-prompt
