@@ -136,17 +136,31 @@ It also sidesteps an `azd` 1.24.x issue where pre-built .NET isolated packages g
 
 ## Local development
 
-```bash
-# Install dependencies for your chosen runtime
-cd src/api-node && npm install
-# or: pip install -r src/api-python/requirements.txt
-# or: dotnet build src/api-dotnet           # opens Api.Dotnet.sln if you use Visual Studio
+Pick the backend you want to run locally and install its deps once:
 
-# Run the Static Web Apps emulator (frontend + linked API)
-swa start ./src/web --api-location ./src/api-node
+```bash
+# Node 20
+cd src/api-node && npm install
+
+# or — Python 3.11
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
+pip install -r src/api-python/requirements.txt
+
+# or — .NET 10
+dotnet build src/api-dotnet/Api.Dotnet.csproj
 ```
 
-Open <http://localhost:4280>. The frontend will call `/api/status` exactly as it does in Azure.
+Sign in so `DefaultAzureCredential` can reach the Cosmos account that `azd up` provisioned, then start the Static Web Apps emulator pointing at the matching API folder:
+
+```bash
+az login
+
+swa start ./src/web --api-location ./src/api-node
+# or:  --api-location ./src/api-python
+# or:  --api-location ./src/api-dotnet
+```
+
+Open <http://localhost:4280>. The frontend will call `/api/status` exactly as it does in Azure — same code, same managed-identity flow (locally satisfied by your `az login` token).
 
 ## CI/CD
 
