@@ -77,6 +77,16 @@ jobs:
             --federated-credential-provider "github" `
             --tenant-id "$Env:AZURE_TENANT_ID"
 
+      # Also log the Azure CLI in via OIDC, because the postdeploy hook
+      # (scripts/deploy-api.sh) shells out to `az functionapp deployment
+      # source config-zip`. azd's auth context is separate from az's.
+      - name: Log in with Azure CLI (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
       - name: Provision infrastructure
         run: azd provision --no-prompt
 
